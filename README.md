@@ -1,6 +1,129 @@
-# 豆瓣 API（Douban API）
+# Douban API（豆瓣 API）
 
-[中文](#中文) · [English](#english)
+[English](#english) · [中文](#中文)
+
+## English
+
+This repo reads public Douban data with Python or curl. You can search books, movies, and music by keyword, read the short comments and long reviews of an item, and read a group topic with its replies. You need one EveryInfra API key. You do not need a Douban account or cookie. The same API also works as an MCP tool in Claude and Cursor. Billing is per call: these 4 capabilities cost $1.39 to $24.00 per 1,000 calls. Failed calls and empty results are not charged. The EveryInfra Douban API has 4 capabilities, all listed on the platform page: <https://everyinfra.com/en/douban-api?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
+
+### Quick start
+
+```bash
+git clone https://github.com/everyinfra/douban-api.git
+cd douban-api
+pip install -r requirements.txt
+export EVERYINFRA_API_KEY=<your API key>
+python main.py search 小王子 --out items.csv
+python main.py comments "<item url>" --out comments.csv
+python main.py reviews "<item url>" --limit 3 --out reviews.json
+python main.py topic "<group topic url>" --out topic.json
+```
+
+- Take the item link from the `url` field of a `search` result, for example https://book.douban.com/subject/<ID>/. Movie and music items use the same kind of link.
+- `reviews` is billed by the rows you ask for. `--limit 3` asks for 3 rows. Without `--limit`, it asks for 15.
+- `topic` takes a group topic link such as https://www.douban.com/group/topic/<ID>/ and returns the topic text with its replies.
+- Without `--out`, the command prints the first 3 rows as JSON. With `--out`, it saves a .csv or .json file. The CSV has a BOM, so Excel opens it without garbled text.
+- Register at everyinfra.com, then create the API key in the console. Steps: <https://everyinfra.com/en/docs?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api#quickstart>
+
+### curl
+
+```bash
+curl -X POST https://api.everyinfra.com/api/v1/social \
+  -H "Authorization: Bearer $EVERYINFRA_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"platform":"douban","action":"search","params":{"keyword":"小王子"}}'
+```
+
+All capabilities use the same URL. Change `action` and `params` to call another one. Examples for `comments`, `reviews`, and `group_topic` are in [examples/curl.sh](examples/curl.sh).
+
+### Claude and Cursor (MCP)
+
+The remote MCP URL is <https://api.everyinfra.com/mcp>. Add the `Authorization: Bearer` header with your API key. EveryInfra runs the server, so you install no local program.
+
+Claude Code:
+
+```bash
+claude mcp add --transport http everyinfra https://api.everyinfra.com/mcp --header "Authorization: Bearer <API Key>"
+```
+
+Cursor and other clients that read `mcp.json` ([examples/mcp.json](examples/mcp.json)):
+
+```json
+{
+  "mcpServers": {
+    "everyinfra": {
+      "url": "https://api.everyinfra.com/mcp",
+      "headers": {
+        "Authorization": "Bearer <API Key>"
+      }
+    }
+  }
+}
+```
+
+Custom connectors in Claude on the web and desktop, and ChatGPT, accept only a URL. Enter <https://api.everyinfra.com/mcp/all>, sign in to EveryInfra when asked, and allow access. You do not need to enter a key. Full steps: <https://everyinfra.com/en/mcp-server?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
+
+### Price
+
+| `action` | Per 1,000 calls |
+|---|---|
+| `search` | $1.39 |
+| `comments` | $1.39 |
+| `reviews` | $24.00 |
+| `group_topic` | $1.39 |
+
+- Billing is per call, about $0.0014 to $0.024 each. Failed calls, empty results, parameter errors, and authentication failures are not charged.
+- `reviews` is billed by the rows you ask for: each row counts as one call, and rows that do not come back are refunded.
+- A new account gets a $1 trial allowance, valid for 24 hours. No credit card is needed. How to claim it: <https://everyinfra.com/en/pricing?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
+
+### Fields
+
+The fields of each capability are documented on the English pages linked below.
+
+- `search`: <https://everyinfra.com/en/douban-api/search?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
+- `comments`: <https://everyinfra.com/en/douban-api/comments?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
+- `reviews`: <https://everyinfra.com/en/douban-api/reviews?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
+- `group_topic`: <https://everyinfra.com/en/douban-api/group_topic?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
+
+### FAQ
+
+**Do I need a Douban account or cookie to call the API?**
+
+No. Send the `Authorization: Bearer` header with your API key. The request body holds `platform`, `action`, and the capability parameters. You do not scan a QR code, keep a login session, or open a browser.
+
+**How much does it cost? Are failed calls charged? Is there a free allowance?**
+
+Billing is per call, from $1.39 per 1,000 calls. Failed calls, empty results, parameter errors, and authentication failures are not charged. A new account gets a $1 trial allowance, valid for 24 hours. No credit card is needed. How to claim it: <https://everyinfra.com/en/pricing?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
+
+**Can I connect the Douban API to Claude or Cursor?**
+
+Yes. The remote MCP URL is <https://api.everyinfra.com/mcp>. Add the `Authorization: Bearer` header with your API key. You install no local program. Setup for Claude, Cursor, ChatGPT, and Claude Code: <https://everyinfra.com/en/mcp-server?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>.
+
+**What legal points apply when I use Douban data?**
+
+The EveryInfra Terms of Service require you to make sure your use of the data follows applicable law and the terms of the relevant platform. Do not use the data for anything illegal or anything that violates privacy or intellectual property rights. Do not use bulk scraping for harassment, fraud, or other abuse. When you use personal information such as nicknames and avatars, keep only the fields your business needs.
+
+**Which Douban data can I get?**
+
+The EveryInfra Douban API has 4 capabilities:
+
+- keyword search
+- reviews
+- comments
+- group topic
+
+Parameters and return fields for each capability are on the platform page: <https://everyinfra.com/en/douban-api?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
+
+### Tested
+
+Before release, we ran the 4 commands in Quick start against the live API with this repo's code.
+
+| Command | Time (Singapore, UTC+8) | Rows | Charged |
+|---|---|---|---|
+| `python main.py search 小王子 --out items.csv` | 2026-11-21 09:19 | 5 | $0.001389 |
+| `python main.py comments "<item url>" --out comments.csv` | 2026-11-21 09:19 | 20 | $0.001389 |
+| `python main.py reviews "<item url>" --limit 3 --out reviews.json` | 2026-11-21 09:20 | 3 | $0.072000 |
+| `python main.py topic "<group topic url>" --out topic.json` | 2026-11-21 09:20 | 1 | $0.001389 |
 
 ## 中文
 
@@ -205,129 +328,6 @@ EveryInfra 服务条款要求你自行确保数据用法符合适用法律和相
   "posted_at": "2005-04-06T03:51:52+00:00"
 }
 ```
-
-## English
-
-This repo reads public Douban data with Python or curl. You can search books, movies, and music by keyword, read the short comments and long reviews of an item, and read a group topic with its replies. You need one EveryInfra API key. You do not need a Douban account or cookie. The same API also works as an MCP tool in Claude and Cursor. Billing is per call: these 4 capabilities cost $1.39 to $24.00 per 1,000 calls. Failed calls and empty results are not charged. The EveryInfra Douban API has 4 capabilities, all listed on the platform page: <https://everyinfra.com/en/douban-api?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
-
-### Quick start
-
-```bash
-git clone https://github.com/everyinfra/douban-api.git
-cd douban-api
-pip install -r requirements.txt
-export EVERYINFRA_API_KEY=<your API key>
-python main.py search 小王子 --out items.csv
-python main.py comments "<item url>" --out comments.csv
-python main.py reviews "<item url>" --limit 3 --out reviews.json
-python main.py topic "<group topic url>" --out topic.json
-```
-
-- Take the item link from the `url` field of a `search` result, for example https://book.douban.com/subject/<ID>/. Movie and music items use the same kind of link.
-- `reviews` is billed by the rows you ask for. `--limit 3` asks for 3 rows. Without `--limit`, it asks for 15.
-- `topic` takes a group topic link such as https://www.douban.com/group/topic/<ID>/ and returns the topic text with its replies.
-- Without `--out`, the command prints the first 3 rows as JSON. With `--out`, it saves a .csv or .json file. The CSV has a BOM, so Excel opens it without garbled text.
-- Register at everyinfra.com, then create the API key in the console. Steps: <https://everyinfra.com/en/docs?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api#quickstart>
-
-### curl
-
-```bash
-curl -X POST https://api.everyinfra.com/api/v1/social \
-  -H "Authorization: Bearer $EVERYINFRA_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"platform":"douban","action":"search","params":{"keyword":"小王子"}}'
-```
-
-All capabilities use the same URL. Change `action` and `params` to call another one. Examples for `comments`, `reviews`, and `group_topic` are in [examples/curl.sh](examples/curl.sh).
-
-### Claude and Cursor (MCP)
-
-The remote MCP URL is <https://api.everyinfra.com/mcp>. Add the `Authorization: Bearer` header with your API key. EveryInfra runs the server, so you install no local program.
-
-Claude Code:
-
-```bash
-claude mcp add --transport http everyinfra https://api.everyinfra.com/mcp --header "Authorization: Bearer <API Key>"
-```
-
-Cursor and other clients that read `mcp.json` ([examples/mcp.json](examples/mcp.json)):
-
-```json
-{
-  "mcpServers": {
-    "everyinfra": {
-      "url": "https://api.everyinfra.com/mcp",
-      "headers": {
-        "Authorization": "Bearer <API Key>"
-      }
-    }
-  }
-}
-```
-
-Custom connectors in Claude on the web and desktop, and ChatGPT, accept only a URL. Enter <https://api.everyinfra.com/mcp/all>, sign in to EveryInfra when asked, and allow access. You do not need to enter a key. Full steps: <https://everyinfra.com/en/mcp-server?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
-
-### Price
-
-| `action` | Per 1,000 calls |
-|---|---|
-| `search` | $1.39 |
-| `comments` | $1.39 |
-| `reviews` | $24.00 |
-| `group_topic` | $1.39 |
-
-- Billing is per call, about $0.0014 to $0.024 each. Failed calls, empty results, parameter errors, and authentication failures are not charged.
-- `reviews` is billed by the rows you ask for: each row counts as one call, and rows that do not come back are refunded.
-- A new account gets a $1 trial allowance, valid for 24 hours. No credit card is needed. How to claim it: <https://everyinfra.com/en/pricing?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
-
-### Fields
-
-The fields of each capability are documented on the English pages linked below.
-
-- `search`: <https://everyinfra.com/en/douban-api/search?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
-- `comments`: <https://everyinfra.com/en/douban-api/comments?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
-- `reviews`: <https://everyinfra.com/en/douban-api/reviews?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
-- `group_topic`: <https://everyinfra.com/en/douban-api/group_topic?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
-
-### FAQ
-
-**Do I need a Douban account or cookie to call the API?**
-
-No. Send the `Authorization: Bearer` header with your API key. The request body holds `platform`, `action`, and the capability parameters. You do not scan a QR code, keep a login session, or open a browser.
-
-**How much does it cost? Are failed calls charged? Is there a free allowance?**
-
-Billing is per call, from $1.39 per 1,000 calls. Failed calls, empty results, parameter errors, and authentication failures are not charged. A new account gets a $1 trial allowance, valid for 24 hours. No credit card is needed. How to claim it: <https://everyinfra.com/en/pricing?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
-
-**Can I connect the Douban API to Claude or Cursor?**
-
-Yes. The remote MCP URL is <https://api.everyinfra.com/mcp>. Add the `Authorization: Bearer` header with your API key. You install no local program. Setup for Claude, Cursor, ChatGPT, and Claude Code: <https://everyinfra.com/en/mcp-server?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>.
-
-**What legal points apply when I use Douban data?**
-
-The EveryInfra Terms of Service require you to make sure your use of the data follows applicable law and the terms of the relevant platform. Do not use the data for anything illegal or anything that violates privacy or intellectual property rights. Do not use bulk scraping for harassment, fraud, or other abuse. When you use personal information such as nicknames and avatars, keep only the fields your business needs.
-
-**Which Douban data can I get?**
-
-The EveryInfra Douban API has 4 capabilities:
-
-- keyword search
-- reviews
-- comments
-- group topic
-
-Parameters and return fields for each capability are on the platform page: <https://everyinfra.com/en/douban-api?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
-
-### Tested
-
-Before release, we ran the 4 commands in Quick start against the live API with this repo's code.
-
-| Command | Time (Singapore, UTC+8) | Rows | Charged |
-|---|---|---|---|
-| `python main.py search 小王子 --out items.csv` | 2026-11-21 09:19 | 5 | $0.001389 |
-| `python main.py comments "<item url>" --out comments.csv` | 2026-11-21 09:19 | 20 | $0.001389 |
-| `python main.py reviews "<item url>" --limit 3 --out reviews.json` | 2026-11-21 09:20 | 3 | $0.072000 |
-| `python main.py topic "<group topic url>" --out topic.json` | 2026-11-21 09:20 | 1 | $0.001389 |
 
 ## License
 
