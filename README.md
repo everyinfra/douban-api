@@ -78,12 +78,75 @@ Custom connectors in Claude on the web and desktop, and ChatGPT, accept only a U
 
 ### Fields
 
-The fields of each capability are documented on the English pages linked below.
+These are the fields that the 4 capabilities returned in our test. Each meaning is the first sentence of the field's entry in the API documentation. The link under each table has the full text.
 
-- `search`: <https://everyinfra.com/en/douban-api/search?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
-- `comments`: <https://everyinfra.com/en/douban-api/comments?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
-- `reviews`: <https://everyinfra.com/en/douban-api/reviews?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
-- `group_topic`: <https://everyinfra.com/en/douban-api/group_topic?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
+#### `search` (keyword search)
+
+| Field | Meaning |
+|---|---|
+| `id` | The record's unique ID on the platform. |
+| `url` | Link to the record on the platform. |
+| `title` | Title. null when the platform has no titles (for example text-only posts). |
+| `platform` | Source platform identifier, the same as platform in the request (for example xiaohongshu, tiktok). |
+
+Other fields that the test returned: `subject_type`, `year`, `author`, and `cover_url`.
+
+All parameters and fields: <https://everyinfra.com/en/douban-api/search?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
+
+#### `comments` (comments)
+
+| Field | Meaning |
+|---|---|
+| `id` | The record's unique ID on the platform. |
+| `text` | Body text with HTML removed, returned in full and never cut short (on a few platforms the list results themselves carry only an excerpt; the platform's field notes say so). |
+| `rating` | Rating. **The scale varies by platform**: rating_scale on the same row gives the maximum (usually 5; Booking, Douban, iQIYI and NAVER use 10). |
+| `author_name` | Author's display name. |
+| `author_url` | Link to the author's profile on the platform. |
+| `posted_at` | Publish time in ISO 8601, UTC (for example 2026-08-07T12:34:56+00:00). |
+| `platform` | Source platform identifier, the same as platform in the request (for example xiaohongshu, tiktok). |
+| `rating_scale` | Maximum of rating in the same row: 5 for five-star scales, 10 for ten-point scales. |
+
+Other fields that the test returned: `subject_id`, `subject_name`, `subject_type`, `rating_label`, `author_avatar_url`, and `vote_count`.
+
+All parameters and fields: <https://everyinfra.com/en/douban-api/comments?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
+
+#### `reviews` (reviews)
+
+| Field | Meaning |
+|---|---|
+| `id` | The record's unique ID on the platform. |
+| `url` | Link to the record on the platform. |
+| `title` | Title. null when the platform has no titles (for example text-only posts). |
+| `text` | Body text with HTML removed, returned in full and never cut short (on a few platforms the list results themselves carry only an excerpt; the platform's field notes say so). |
+| `rating` | Rating. **The scale varies by platform**: rating_scale on the same row gives the maximum (usually 5; Booking, Douban, iQIYI and NAVER use 10). |
+| `author_name` | Author's display name. |
+| `author_url` | Link to the author's profile on the platform. |
+| `reply_count` | Replies, usually replies to a comment. null means not disclosed. |
+| `posted_at` | Publish time in ISO 8601, UTC (for example 2026-08-07T12:34:56+00:00). |
+| `platform` | Source platform identifier, the same as platform in the request (for example xiaohongshu, tiktok). |
+| `rating_scale` | Maximum of rating in the same row: 5 for five-star scales, 10 for ten-point scales. |
+
+Other fields that the test returned: `subject_id`, `subject_name`, `subject_type`, `rating_label`, and `author_avatar_url`.
+
+All parameters and fields: <https://everyinfra.com/en/douban-api/reviews?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
+
+#### `group_topic` (group topic)
+
+| Field | Meaning |
+|---|---|
+| `id` | The record's unique ID on the platform. |
+| `url` | Link to the record on the platform. |
+| `title` | Title. null when the platform has no titles (for example text-only posts). |
+| `text` | Body text with HTML removed, returned in full and never cut short (on a few platforms the list results themselves carry only an excerpt; the platform's field notes say so). |
+| `author_name` | Author's display name. |
+| `author_url` | Link to the author's profile on the platform. |
+| `reply_count` | Replies, usually replies to a comment. null means not disclosed. |
+| `posted_at` | Publish time in ISO 8601, UTC (for example 2026-08-07T12:34:56+00:00). |
+| `platform` | Source platform identifier, the same as platform in the request (for example xiaohongshu, tiktok). |
+
+Other fields that the test returned: `group_id`, `group_name`, `group_url`, and `replies`.
+
+All parameters and fields: <https://everyinfra.com/en/douban-api/group_topic?utm_source=github&utm_medium=example_repo&utm_campaign=douban-api>
 
 ### FAQ
 
